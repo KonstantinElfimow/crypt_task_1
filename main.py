@@ -181,8 +181,8 @@ def decrypt_cbc(path_from: str, path_to: str) -> bool:
     try:
         # Открываем файл, сообщение которого нужно расшифровать, и файл, куда записываем расшифрованное сообщение
         with open(path_from, 'rb') as rfile:
-            # блок открытого текста и синхропосылка одновременно
-            message: list = np.copy(IV)
+            # синхропосылка
+            iv: list = np.copy(IV)
             while True:
                 # Проверка конца файла
                 file_eof: bytes = rfile.read(1)
@@ -196,7 +196,9 @@ def decrypt_cbc(path_from: str, path_to: str) -> bool:
                     cipher.append(np.uint16(int.from_bytes(rfile.read(2), byteorder="little", signed=False)))
 
                 #  Дешифрование
-                message = xor_for_cbc(message, Dk(cipher))
+                message: list = xor_for_cbc(iv, Dk(cipher))
+                #  Сохраняем синхропосылку
+                iv = np.copy(cipher)
                 #  записываем результат в файл
                 _add_bin_data_to_file(path_to, message)
             return True
@@ -243,13 +245,13 @@ def task_cbc():
         f = open(f'crypt/cipher/cbc/cypher_{x}.txt', 'w')
         f.close()
         # Шифрование в режиме CBC
-        crypt_ecb(f'crypt/input/input_{x}.txt', f'crypt/cipher/cbc/cypher_{x}.txt')
+        crypt_cbc(f'crypt/input/input_{x}.txt', f'crypt/cipher/cbc/cypher_{x}.txt')
     for x in (1, 2, 3):
         # Чистка файла перед записью
         f = open(f'crypt/output/cbc/output_{x}.txt', 'w')
         f.close()
         # Дешифрование в режиме CBC
-        decrypt_ecb(f'crypt/cipher/cbc/cypher_{x}.txt', f'crypt/output/cbc/output_{x}.txt')
+        decrypt_cbc(f'crypt/cipher/cbc/cypher_{x}.txt', f'crypt/output/cbc/output_{x}.txt')
 
 
 if __name__ == '__main__':
