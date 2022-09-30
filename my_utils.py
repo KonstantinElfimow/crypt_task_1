@@ -1,3 +1,34 @@
+import numpy as np
+
+
+def add_bin_data_to_file(path_to: str, data: list) -> bool:
+    try:
+        with open(path_to, 'rb+') as f:
+            f.seek(0, 2)  # перемещение курсора в конец файла
+            for d in data:
+                f.write(d)  # собственно, запись
+            return True
+    except FileNotFoundError:
+        print("Невозможно открыть файл")
+        return False
+
+
+def entropy(labels: bytearray) -> float:
+    """ Вычисление энтропии вектора из 0-1 """
+    n_labels = len(labels)
+
+    if n_labels <= 1:
+        return 0
+
+    counts = np.bincount(labels)
+    probs = counts[np.nonzero(counts)] / n_labels
+    n_classes = len(probs)
+
+    if n_classes <= 1:
+        return 0
+    return - np.sum(probs * np.log(probs)) / np.log(n_classes)
+
+
 def cyclic_shift(value, width: int, shift: int):
     """ Побитовый циклический сдвиг числа.
         value < 0 - циклический сдвиг вправо.
@@ -26,32 +57,6 @@ def cast_np_uint(value, width_old: int, ntype: type, width_new: int):
     return res
 
 
-def take_bits(value, width: int, from_i1_to_i2: tuple) -> int:
-    """ Функция создана с целью преобразования из длинных
-        беззнаковых целых чисел в более короткие беззнаковые
-        целые числа. Длина ntype должна совпадать c width_new. """
-    # Преобразование числа в его бинарное представление, начиная с младшего разряда
-    binary = '{:0{width}b}'.format(value, width=width)[::-1]
-
-    res = 0
-    for i in range(from_i1_to_i2[0], from_i1_to_i2[1] + 1):
-        res += int(binary[i]) * (2 ** i)
-    return res
-
-
 def to_bits(value, width: int) -> str:
-    # Преобразование числа в его битовое представление
+    """ Преобразование числа в его битовое представление """
     return '{:0{width}b}'.format(value, width=width)[::1]
-
-
-# def right_shift_uint(value, width: int, shift: int):
-#     if shift >= width:
-#         return type(value)(int(to_bits(0, width), base=2))
-#
-#     binary = to_bits(value, width)
-#     res = 0
-#     for i in range(shift, width):
-#         res += int(binary[i]) * (2 ** i)
-#         i += 1
-#     res = type(value)(res)
-#     return res
